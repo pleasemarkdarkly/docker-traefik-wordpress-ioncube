@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  mysql_staging:
+    image: mysql:5.7
+    container_name: mysql_staging
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes: 
+      - ${PWD}/db_data:/var/lib/mysql
+    networks:
+      - proxy
+
+  phpmyadmin_staging:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_staging
+    restart: always
+    environment:
+      PMA_HOST: mysql_staging
+      MYSQL_ROOT_PASSWORD: root_password 
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin_staging.entrypoints=http"
+      - "traefik.http.routers.phpmyadmin_staging.rule=Host(`phpmyadmin_staging.yourdomain.com`)"
+      - "traefik.http.middlewares.phpmyadmin_staging-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.phpmyadmin_staging.middlewares=phpmyadmin_staging-https-redirect"
+      - "traefik.http.routers.phpmyadmin_staging-secure.entrypoints=https"
+      - "traefik.http.routers.phpmyadmin_staging-secure.rule=Host(`phpmyadmin_staging.yourdomain.com`)"
+      - "traefik.http.routers.phpmyadmin_staging-secure.tls=true"
+      - "traefik.http.routers.phpmyadmin_staging-secure.tls.certresolver=http"
+      - "traefik.http.routers.phpmyadmin_staging-secure.service=phpmyadmin_staging"
+      - "traefik.http.services.phpmyadmin_staging.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+
+  wordpress_staging:
+    depends_on: 
+      - mysql_staging
+    image: wordpress-ioncube:latest 
+    container_name: wordpress_staging
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true    
+    environment:
+      WORDPRESS_DB_HOST: mysql_staging:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+    volumes:
+      - ${PWD}/wp_data:/var/www/html
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wordpress_staging.entrypoints=http"
+      - "traefik.http.routers.wordpress_staging.rule=Host(`staging.yourdomain.com`)"
+      - "traefik.http.middlewares.wordpress_staging-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.wordpress_staging.middlewares=wordpress_staging-https-redirect"
+      - "traefik.http.routers.wordpress_staging-secure.entrypoints=https"
+      - "traefik.http.routers.wordpress_staging-secure.rule=Host(`staging.yourdomain.com`)"
+      - "traefik.http.routers.wordpress_staging-secure.tls=true"
+      - "traefik.http.routers.wordpress_staging-secure.tls.certresolver=http"
+      - "traefik.http.routers.wordpress_staging-secure.service=wordpress_staging"
+      - "traefik.http.services.wordpress_staging.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

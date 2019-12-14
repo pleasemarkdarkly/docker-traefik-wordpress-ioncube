@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  mysql_production:
+    image: mysql:5.7
+    container_name: mysql_production
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes: 
+      - ${PWD}/db_data:/var/lib/mysql
+    networks:
+      - proxy
+
+  phpmyadmin_production:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_production
+    restart: always
+    environment:
+      PMA_HOST: mysql_production
+      MYSQL_ROOT_PASSWORD: root_password 
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin_production.entrypoints=http"
+      - "traefik.http.routers.phpmyadmin_production.rule=Host(`phpmyadmin_production.yourdomain.com`)"
+      - "traefik.http.middlewares.phpmyadmin_production-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.phpmyadmin_production.middlewares=phpmyadmin_production-https-redirect"
+      - "traefik.http.routers.phpmyadmin_production-secure.entrypoints=https"
+      - "traefik.http.routers.phpmyadmin_production-secure.rule=Host(`phpmyadmin_production.yourdomain.com`)"
+      - "traefik.http.routers.phpmyadmin_production-secure.tls=true"
+      - "traefik.http.routers.phpmyadmin_production-secure.tls.certresolver=http"
+      - "traefik.http.routers.phpmyadmin_production-secure.service=phpmyadmin_production"
+      - "traefik.http.services.phpmyadmin_production.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+
+  wordpress_production:
+    depends_on: 
+      - mysql_production
+    image: wordpress-iocube:latest
+    container_name: wordpress_production
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true    
+    environment:
+      WORDPRESS_DB_HOST: mysql_production:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+    volumes:
+      - ${PWD}/wp_data:/var/www/html
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wordpress_production.entrypoints=http"
+      - "traefik.http.routers.wordpress_production.rule=Host(`production.yourdomain.com`)"
+      - "traefik.http.middlewares.wordpress_production-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.wordpress_production.middlewares=wordpress_production-https-redirect"
+      - "traefik.http.routers.wordpress_production-secure.entrypoints=https"
+      - "traefik.http.routers.wordpress_production-secure.rule=Host(`production.yourdomain.com`)"
+      - "traefik.http.routers.wordpress_production-secure.tls=true"
+      - "traefik.http.routers.wordpress_production-secure.tls.certresolver=http"
+      - "traefik.http.routers.wordpress_production-secure.service=wordpress_production"
+      - "traefik.http.services.wordpress_production.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

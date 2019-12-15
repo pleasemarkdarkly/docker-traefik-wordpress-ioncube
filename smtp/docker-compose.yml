@@ -1,0 +1,16 @@
+version: '3'
+services:
+  smtp:
+    container_name: smtp
+    image: bytemark/smtp
+    restart: always
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+
+

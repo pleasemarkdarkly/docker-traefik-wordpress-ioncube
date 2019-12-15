@@ -25,6 +25,10 @@ cd ..
 docker-compose up
 ```
 
+## SMTP
+
+In order for Wordpress or any other application to send mail, it is necessary to give them access to SMTP container. Using the container name is sufficient for the host in Wordpress. I've included a seperate docker-compose file, however, including it in the Wordpress docker-compose.yml depending on Wordpress is not a bad idea. 
+
 ## Building Wordpress Ion-cube (Staging/Production)
 
 This build of Wordpress uses the latests 5.3.1 and PHP version 7.3.12. You may dive into the subdirectory staging.wordpress/wp_docker and edit the build.yml and Dockerfile to change the Wordpress version to anything you need.

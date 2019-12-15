@@ -1,6 +1,6 @@
 # docker-traefik-wordpress-iocube
 
-This repo contains docker-compose.yml files to quickly get up to speed with a Traefik 2.0 reverse proxy and staging and production Wordpress website. Some knowledge of Docker build and Traefik basic configuration is needed, however, the compose files are complete and have been used for some time. The Wordpress subdomains have multiple hosts entries. Detailed instructions are not included, but general high-level todo will be, they are as follows.
+This repo contains docker-compose.yml files to quickly get up to speed with a Traefik 2.0 reverse proxy and staging and production Wordpress website. Some knowledge of Docker build and Traefik basic configuration is needed, however, the compose files are complete and have been used for some time. The Wordpress subdomains have multiple hosts entries. Detailed instructions are not included, but general high-level todos are as follows.
 
 ## Traefik 2.0
 
